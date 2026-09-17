@@ -408,6 +408,89 @@ body {
     }
 }
 
+
+/* =====================================================
+   스마트폰 전용 화면
+   ===================================================== */
+.mobile-back { display: none; }
+
+@media (max-width: 600px) {
+    html, body {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+    }
+
+    .reader {
+        display: block;
+        width: 100%;
+        height: 100vh;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-width: 0;
+        height: calc(100vh - 16px);
+        padding: 18px 14px;
+        border-radius: 14px;
+        box-sizing: border-box;
+    }
+
+    .main-title { font-size: 23px; margin-bottom: 14px; }
+    .audio-box { margin-bottom: 12px; }
+
+    .title-item {
+        font-size: 16px;
+        padding: 11px 10px;
+        margin-bottom: 5px;
+    }
+
+    .content {
+        display: none;
+        width: 100%;
+        height: calc(100vh - 16px);
+        box-sizing: border-box;
+    }
+
+    .content.mobile-open {
+        display: flex;
+        width: 100%;
+    }
+
+    .content-box {
+        width: 100%;
+        height: calc(100vh - 70px);
+        padding: 18px 20px;
+        border-radius: 14px;
+        font-size: 17px;
+        line-height: 1.8;
+        box-sizing: border-box;
+    }
+
+    .content-title {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+
+    .pagination { display: none; }
+
+    .mobile-back {
+        display: block;
+        flex: 0 0 48px;
+        width: 100%;
+        height: 42px;
+        margin-bottom: 6px;
+        border: none;
+        border-radius: 10px;
+        background: rgba(40,40,40,0.78);
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+    }
+}
+
 </style>
 </head>
 
@@ -543,6 +626,8 @@ body {
          ================================================= -->
 
     <main class="content">
+
+        <button class="mobile-back" onclick="backToMain()">← 제목 목록으로 돌아가기</button>
 
 
         <!-- 1. 당신의 체온 -->
@@ -1173,9 +1258,13 @@ function showPage(page) {
     );
 
 
-    /* 해당 페이지 첫 번째 시 */
-
-    showContent(start);
+    /* PC에서는 기존처럼 첫 번째 시를 표시
+       스마트폰에서는 처음에 제목 목록만 표시 */
+    if (!isMobile()) {
+        showContent(start);
+    } else {
+        closeMobileContent();
+    }
 
 }
 
@@ -1187,83 +1276,85 @@ function showPage(page) {
 
 function showContent(number) {
 
-
-    /* 모든 본문 닫기 */
-
-    contents.forEach(
-        content => {
-
-            content.classList.remove(
-                "active"
-            );
-
-        }
-    );
-
-
-    /* 선택한 본문 열기 */
-
-    if (contents[number]) {
-
-        contents[number].classList.add(
-            "active"
-        );
-
-
-        /*
-           새로운 시를 열면
-           본문 맨 위에서 시작
-        */
-
-        contents[number].scrollTop = 0;
-
+    /* 스마트폰에서는 제목 목록을 숨기고 본문만 표시 */
+    if (isMobile()) {
+        document.querySelector(".sidebar").style.display = "none";
+        document.querySelector(".content").classList.add("mobile-open");
     }
 
-
-    /* 제목 활성화 */
-
-    titles.forEach(
-        (title, index) => {
-
-            if (index === number) {
-
-                title.classList.add(
-                    "active"
-                );
-
-            } else {
-
-                title.classList.remove(
-                    "active"
-                );
-
-            }
-
+    /* 모든 본문 닫기 */
+    contents.forEach(
+        content => {
+            content.classList.remove("active");
         }
     );
 
+    /* 선택한 본문 열기 */
+    if (contents[number]) {
+        contents[number].classList.add("active");
+        contents[number].scrollTop = 0;
+    }
 
-    /* =================================================
-       제목을 클릭하면 음악 재생
-       ================================================= */
+    /* 제목 활성화 */
+    titles.forEach(
+        (title, index) => {
+            if (index === number) {
+                title.classList.add("active");
+            } else {
+                title.classList.remove("active");
+            }
+        }
+    );
 
+    /* 제목을 클릭하면 음악 재생 */
     if (music) {
-
         music.play().catch(
             function(error) {
-
                 console.log(
                     "음악 재생을 시작하지 못했습니다.",
                     error
                 );
-
             }
         );
-
     }
-
 }
 
+/* 스마트폰인지 확인 */
+function isMobile() {
+    return window.matchMedia("(max-width: 600px)").matches;
+}
+
+/* 스마트폰 본문에서 제목 목록으로 돌아가기 */
+function backToMain() {
+    closeMobileContent();
+
+    titles.forEach(title => {
+        title.classList.remove("active");
+    });
+}
+
+/* 스마트폰 본문 닫기 */
+function closeMobileContent() {
+    const sidebar = document.querySelector(".sidebar");
+    const content = document.querySelector(".content");
+
+    if (isMobile()) {
+        sidebar.style.display = "block";
+        content.classList.remove("mobile-open");
+
+        contents.forEach(contentBox => {
+            contentBox.classList.remove("active");
+        });
+    }
+}
+
+/* 화면 크기가 바뀌어도 정상 복귀 */
+window.addEventListener("resize", function() {
+    if (!isMobile()) {
+        document.querySelector(".sidebar").style.display = "";
+        document.querySelector(".content").classList.remove("mobile-open");
+    }
+});
 
 /* =====================================================
    시작
@@ -1278,4 +1369,3 @@ showPage(1);
 
 </body>
 </html>
-
