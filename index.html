@@ -374,47 +374,17 @@ body {
    작은 화면
    ===================================================== */
 
-@media (max-width: 900px) {
-
-    .reader {
-
-        gap: 10px;
-
-        padding: 10px;
-    }
-
-    .sidebar {
-
-        width: 24vw;
-
-        min-width: 150px;
-    }
-
-    .content {
-
-        width: 55vw;
-    }
-
-    .content-box {
-
-        padding: 25px;
-
-        font-size: 17px;
-    }
-
-    .title-item {
-
-        font-size: 14px;
-    }
+/* 스마트폰 화면 */
+.mobile-back {
+    display: none;
 }
 
-
-/* =====================================================
-   스마트폰 전용 화면
-   ===================================================== */
-.mobile-back { display: none; }
+.mobile-pagination {
+    display: none;
+}
 
 @media (max-width: 600px) {
+
     html, body {
         width: 100%;
         height: 100%;
@@ -425,69 +395,101 @@ body {
         display: block;
         width: 100%;
         height: 100vh;
-        padding: 8px;
-        box-sizing: border-box;
+        padding: 0;
     }
 
     .sidebar {
         width: 100%;
         min-width: 0;
-        height: calc(100vh - 16px);
-        padding: 18px 14px;
-        border-radius: 14px;
+        height: 100vh;
+        padding: 20px 15px;
         box-sizing: border-box;
+        border-radius: 0;
+        overflow-y: auto;
     }
 
-    .main-title { font-size: 23px; margin-bottom: 14px; }
-    .audio-box { margin-bottom: 12px; }
+    .main-title {
+        font-size: 23px;
+        margin-bottom: 18px;
+    }
 
     .title-item {
-        font-size: 16px;
-        padding: 11px 10px;
-        margin-bottom: 5px;
+        font-size: 17px;
+        padding: 13px 10px;
+        margin-bottom: 7px;
     }
 
     .content {
         display: none;
-        width: 100%;
-        height: calc(100vh - 16px);
-        box-sizing: border-box;
+        position: fixed;
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+        padding: 0;
+        z-index: 1000;
+        background: rgba(253,246,227,0.98);
     }
 
     .content.mobile-open {
-        display: flex;
-        width: 100%;
+        display: block;
     }
 
     .content-box {
         width: 100%;
-        height: calc(100vh - 70px);
-        padding: 18px 20px;
-        border-radius: 14px;
-        font-size: 17px;
-        line-height: 1.8;
+        height: calc(100vh - 58px);
+        min-height: 0;
+        padding: 18px 22px 35px;
         box-sizing: border-box;
+        border-radius: 0;
+        box-shadow: none;
+        font-size: 18px;
+        line-height: 1.85;
+        overflow-y: auto;
     }
 
     .content-title {
         font-size: 24px;
-        margin-bottom: 10px;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
     }
-
-    .pagination { display: none; }
 
     .mobile-back {
         display: block;
-        flex: 0 0 48px;
         width: 100%;
-        height: 42px;
-        margin-bottom: 6px;
+        height: 58px;
         border: none;
-        border-radius: 10px;
-        background: rgba(40,40,40,0.78);
+        background: rgba(40,40,40,0.92);
         color: white;
         font-size: 16px;
+        text-align: left;
+        padding: 0 18px;
         cursor: pointer;
+    }
+
+    /* 스마트폰에서도 제목을 10개씩 페이지로 표시 */
+    /* 스마트폰에서는 제목 목록 아래에 페이지 번호 표시 */
+    .mobile-pagination {
+        display: flex;
+        width: 100%;
+        min-height: 50px;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
+        padding: 5px 0 15px;
+        box-sizing: border-box;
+    }
+
+    /* PC용 페이지 수열은 스마트폰에서 숨김 */
+    .pagination {
+        display: none;
+    }
+
+    .page-number {
+        min-width: 36px;
+        height: 36px;
+        font-size: 15px;
     }
 }
 
@@ -617,6 +619,9 @@ body {
 
         </div>
 
+        <!-- 스마트폰 전용 페이지 수열 -->
+        <div class="mobile-pagination" id="mobilePagination"></div>
+
     </aside>
 
 
@@ -626,8 +631,7 @@ body {
          ================================================= -->
 
     <main class="content">
-
-        <button class="mobile-back" onclick="backToMain()">← 제목 목록으로 돌아가기</button>
+        <button class="mobile-back" onclick="backToTitles()">← 제목 목록으로 돌아가기</button>
 
 
         <!-- 1. 당신의 체온 -->
@@ -1145,6 +1149,9 @@ const contents =
 const pagination =
     document.getElementById("pagination");
 
+const mobilePagination =
+    document.getElementById("mobilePagination");
+
 
 /* =====================================================
    페이지 번호 만들기
@@ -1154,11 +1161,14 @@ function createPagination() {
 
     pagination.innerHTML = "";
 
+    if (mobilePagination) {
+        mobilePagination.innerHTML = "";
+    }
+
     const totalPages =
         Math.ceil(
             titles.length / itemsPerPage
         );
-
 
     for (
         let page = 1;
@@ -1166,32 +1176,41 @@ function createPagination() {
         page++
     ) {
 
+        /* PC용 */
         const button =
             document.createElement("button");
 
-        button.className =
-            "page-number";
-
-        button.textContent =
-            page;
-
+        button.className = "page-number";
+        button.textContent = page;
 
         button.onclick = function() {
-
             showPage(page);
-
         };
-
 
         pagination.appendChild(button);
 
-    }
 
+        /* 스마트폰용 */
+        if (mobilePagination) {
+
+            const mobileButton =
+                document.createElement("button");
+
+            mobileButton.className = "page-number";
+            mobileButton.textContent = page;
+
+            mobileButton.onclick = function() {
+                showPage(page);
+            };
+
+            mobilePagination.appendChild(mobileButton);
+        }
+    }
 }
 
 
 /* =====================================================
-   페이지 표시
+    페이지 표시
    ===================================================== */
 
 function showPage(page) {
@@ -1231,7 +1250,7 @@ function showPage(page) {
 
     const buttons =
         document.querySelectorAll(
-            ".page-number"
+            ".pagination .page-number, .mobile-pagination .page-number"
         );
 
 
@@ -1258,13 +1277,9 @@ function showPage(page) {
     );
 
 
-    /* PC에서는 기존처럼 첫 번째 시를 표시
-       스마트폰에서는 처음에 제목 목록만 표시 */
-    if (!isMobile()) {
-        showContent(start);
-    } else {
-        closeMobileContent();
-    }
+    /* 해당 페이지 첫 번째 시 */
+
+    showContent(start);
 
 }
 
@@ -1277,84 +1292,107 @@ function showPage(page) {
 function showContent(number) {
 
     /* 스마트폰에서는 제목 목록을 숨기고 본문만 표시 */
-    if (isMobile()) {
+    if (window.innerWidth <= 600) {
         document.querySelector(".sidebar").style.display = "none";
         document.querySelector(".content").classList.add("mobile-open");
     }
 
+
+
     /* 모든 본문 닫기 */
+
     contents.forEach(
         content => {
-            content.classList.remove("active");
+
+            content.classList.remove(
+                "active"
+            );
+
         }
     );
+
 
     /* 선택한 본문 열기 */
+
     if (contents[number]) {
-        contents[number].classList.add("active");
+
+        contents[number].classList.add(
+            "active"
+        );
+
+
+        /*
+           새로운 시를 열면
+           본문 맨 위에서 시작
+        */
+
         contents[number].scrollTop = 0;
+
     }
 
+
     /* 제목 활성화 */
+
     titles.forEach(
         (title, index) => {
+
             if (index === number) {
-                title.classList.add("active");
+
+                title.classList.add(
+                    "active"
+                );
+
             } else {
-                title.classList.remove("active");
+
+                title.classList.remove(
+                    "active"
+                );
+
             }
+
         }
     );
 
-    /* 제목을 클릭하면 음악 재생 */
+
+    /* =================================================
+       제목을 클릭하면 음악 재생
+       ================================================= */
+
     if (music) {
+
         music.play().catch(
             function(error) {
+
                 console.log(
                     "음악 재생을 시작하지 못했습니다.",
                     error
                 );
+
             }
         );
+
     }
+
 }
 
-/* 스마트폰인지 확인 */
-function isMobile() {
-    return window.matchMedia("(max-width: 600px)").matches;
-}
 
-/* 스마트폰 본문에서 제목 목록으로 돌아가기 */
-function backToMain() {
-    closeMobileContent();
+/* =====================================================
+   스마트폰 제목 목록으로 돌아가기
+   ===================================================== */
+
+function backToTitles() {
+    document.querySelector(".content").classList.remove("mobile-open");
+    document.querySelector(".sidebar").style.display = "block";
+
+    contents.forEach(content => {
+        content.classList.remove("active");
+    });
 
     titles.forEach(title => {
         title.classList.remove("active");
     });
 }
 
-/* 스마트폰 본문 닫기 */
-function closeMobileContent() {
-    const sidebar = document.querySelector(".sidebar");
-    const content = document.querySelector(".content");
-
-    if (isMobile()) {
-        sidebar.style.display = "block";
-        content.classList.remove("mobile-open");
-
-        contents.forEach(contentBox => {
-            contentBox.classList.remove("active");
-        });
-    }
-}
-
-/* 화면 크기가 바뀌어도 정상 복귀 */
-window.addEventListener("resize", function() {
-    if (!isMobile()) {
-        document.querySelector(".sidebar").style.display = "";
-        document.querySelector(".content").classList.remove("mobile-open");
-    }
-});
 
 /* =====================================================
    시작
