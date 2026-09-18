@@ -408,12 +408,12 @@ body {
         overflow: hidden; /* 내부 title-list만 스크롤되도록 제어 */
     }
 
-    .main-title {
-        font-size: 22px;
-        margin-bottom: 12px;
+    .audio-box {
+        margin-bottom: 10px;
     }
 
-    .audio-box {
+    .main-title {
+        font-size: 22px;
         margin-bottom: 12px;
     }
 
@@ -514,15 +514,16 @@ body {
     <!-- 왼쪽 제목 -->
     <aside class="sidebar">
 
-        <div class="main-title">
-            나의 글 모음
-        </div>
-
-        <!-- 음악 -->
+        <!-- 음악 : 맨 위 -->
         <div class="audio-box">
             <audio id="music" controls preload="auto" loop>
                 <source src="music.mp3" type="audio/mpeg">
             </audio>
+        </div>
+
+        <!-- 제목 -->
+        <div class="main-title">
+            나의 글 모음
         </div>
 
          <!-- 제목 목록 -->
